@@ -1,0 +1,18 @@
+[project]
+root = "."
+db_path = ".projectmind/projectmind.sqlite3"
+include = ["**/*"]
+exclude = [".git", ".projectmind", "node_modules", ".venv", "venv", "dist", "build", "__pycache__"]
+
+[retrieval]
+graph_relevance = 0.35
+semantic_similarity = 0.25
+lexical_match = 0.20
+recency_git = 0.10
+architectural_importance = 0.10
+
+[security]
+allow_write = true
+allowed_commands = ["python", "pytest", "ruff", "mypy", "git", "npm", "pnpm", "yarn"]
+command_timeout = 30
+

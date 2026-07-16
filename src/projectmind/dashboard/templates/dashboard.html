@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ProjectMind — Usage Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel-2: #1c2230;
+    --border: #283041;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-2: #3fb950;
+    --warn: #d29922;
+    --danger: #f85149;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background:
+      radial-gradient(1200px 600px at 80% -10%, #11212f 0%, transparent 60%),
+      radial-gradient(1000px 500px at -10% 10%, #1a1326 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.45;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 22px 60px; }
+  header.top {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; margin-bottom: 22px; flex-wrap: wrap;
+  }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--accent), #8a5cf6);
+    box-shadow: var(--shadow); display: grid; place-items: center;
+    font-weight: 800; color: #0b0f14;
+  }
+  h1 { font-size: 20px; margin: 0; letter-spacing: .2px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .pill {
+    font-size: 12px; color: var(--muted); border: 1px solid var(--border);
+    background: var(--panel); padding: 6px 12px; border-radius: 999px;
+  }
+  .pill .dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent-2); margin-right: 6px; box-shadow: 0 0 8px var(--accent-2);
+  }
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    margin-bottom: 22px;
+  }
+  .card {
+    background: linear-gradient(180deg, var(--panel), var(--panel-2));
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 16px 18px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .card::after {
+    content:""; position:absolute; inset:0 0 auto 0; height:3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity:.5;
+  }
+  .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .6px; }
+  .value { font-size: 26px; font-weight: 700; margin-top: 6px; font-variant-numeric: tabular-nums; }
+  .value.accent { color: var(--accent); }
+  .value.green { color: var(--accent-2); }
+  .value.warn { color: var(--warn); }
+  .section {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-bottom: 22px; box-shadow: var(--shadow);
+  }
+  .section h2 {
+    margin: 0 0 14px; font-size: 15px; letter-spacing: .3px; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section h2 .tick { color: var(--accent); }
+  .proj-grid {
+    display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+  tbody tr:hover { background: rgba(88,166,255,.06); }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px;
+    border: 1px solid var(--border);
+  }
+  .badge.yes { color: var(--accent-2); border-color: rgba(63,185,80,.4); background: rgba(63,185,80,.08); }
+  .badge.no { color: var(--muted); }
+  .chart-box { position: relative; height: 320px; }
+  .small { font-size: 12px; color: var(--muted); }
+  .savings { display: flex; gap: 26px; flex-wrap: wrap; align-items: baseline; }
+  .savings .big { font-size: 28px; font-weight: 700; color: var(--accent-2); font-variant-numeric: tabular-nums; }
+  .err { color: var(--danger); padding: 10px; font-size: 13px; }
+  @media (max-width: 560px) { .value { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo">PM</div>
+      <div>
+        <h1>ProjectMind — Usage Dashboard</h1>
+        <div class="sub" id="rootPath">loading…</div>
+      </div>
+    </div>
+    <div class="pill" id="statusPill"><span class="dot"></span>live · auto-refresh 5s</div>
+  </header>
+
+  <div class="grid" id="kpis">
+    <div class="card"><div class="label">Total Input Tokens</div><div class="value accent" id="kpi_input">—</div></div>
+    <div class="card"><div class="label">Total Output Tokens</div><div class="value" id="kpi_output">—</div></div>
+    <div class="card"><div class="label">Cached Tokens (saved)</div><div class="value green" id="kpi_cached">—</div></div>
+    <div class="card"><div class="label">Total Cost (USD)</div><div class="value warn" id="kpi_cost">—</div></div>
+    <div class="card"><div class="label">Cache Hit Rate</div><div class="value" id="kpi_hitrate">—</div></div>
+    <div class="card"><div class="label">Total Events</div><div class="value" id="kpi_events">—</div></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="tick">▮</span> Tokens por Ação (top actions)</h2>
+    <div class="chart-box"><canvas id="chart"></canvas></div>
+    <div id="chartFallback" style="display:none;"></div>
+  </div>
+
+  <div class="section">
+    <h2><span class="tick">▮</span> Project</h2>
+    <div class="proj-grid">
+      <div class="card"><div class="label">Files</div><div class="value" id="p_files">—</div></div>
+      <div class="card"><div class="label">Symbols</div><div class="value" id="p_symbols">—</div></div>
+      <div class="card"><div class="label">Memories</div><div class="value" id="p_memories">—</div></div>
+      <div class="card"><div class="label">Edges</div><div class="value" id="p_edges">—</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="tick">▮</span> Tokens poupados por cache</h2>
+    <div class="savings">
+      <div><div class="small">Estimated cost saved (USD)</div><div class="big" id="saved_cost">—</div></div>
+      <div><div class="small">Tokens saved by cache</div><div class="big" id="saved_tokens">—</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2><span class="tick">▮</span> Eventos Recentes</h2>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Ação</th><th>Modelo</th>
+            <th class="num">Input</th><th class="num">Cached</th>
+            <th>Cache Hit</th><th class="num">Custo (USD)</th><th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="eventsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="errorBox" class="err"></div>
+</div>
+
+<script>
+const fmt = (n) => (n === null || n === undefined || isNaN(n)) ? "0" : Number(n).toLocaleString("en-US");
+const usd = (n) => "$" + (Number(n || 0)).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 6});
+const pct = (n) => (Number(n || 0) * 100).toFixed(1) + "%";
+
+let chart = null;
+
+async function load() {
+  try {
+    const res = await fetch("/api/usage");
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    render(data);
+    document.getElementById("errorBox").textContent = "";
+  } catch (e) {
+    document.getElementById("errorBox").textContent = "Failed to load data: " + e.message;
+  }
+}
+
+function render(data) {
+  const proj = data.project || {};
+  const usage = data.usage || {};
+  document.getElementById("rootPath").textContent = proj.root || "";
+
+  document.getElementById("kpi_input").textContent = fmt(usage.total_input_tokens);
+  document.getElementById("kpi_output").textContent = fmt(usage.total_output_tokens);
+  document.getElementById("kpi_cached").textContent = fmt(usage.total_cached_tokens);
+  document.getElementById("kpi_cost").textContent = usd(usage.total_cost_usd);
+  document.getElementById("kpi_hitrate").textContent = pct(usage.cache_hit_rate);
+  document.getElementById("kpi_events").textContent = fmt(usage.events);
+
+  document.getElementById("p_files").textContent = fmt(proj.files);
+  document.getElementById("p_symbols").textContent = fmt(proj.symbols);
+  document.getElementById("p_memories").textContent = fmt(proj.memories);
+  document.getElementById("p_edges").textContent = fmt(proj.edges);
+
+  document.getElementById("saved_cost").textContent = usd(usage.estimated_cost_saved_usd);
+  document.getElementById("saved_tokens").textContent = fmt(usage.tokens_saved_by_cache);
+
+  renderChart(data.top_actions || []);
+  renderEvents(data.recent_events || []);
+}
+
+function renderChart(topActions) {
+  const labels = topActions.map(a => a.action);
+  const inputVals = topActions.map(a => a.ti || 0);
+  const costVals = topActions.map(a => a.cost || 0);
+
+  const canvas = document.getElementById("chart");
+  const fallback = document.getElementById("chartFallback");
+
+  if (typeof window.Chart === "undefined") {
+    canvas.style.display = "none";
+    fallback.style.display = "block";
+    fallback.innerHTML = buildTable(labels, inputVals, costVals);
+    return;
+  }
+
+  canvas.style.display = "block";
+  fallback.style.display = "none";
+
+  if (chart) chart.destroy();
+  const ctx = canvas.getContext("2d");
+  chart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        { label: "Input Tokens", data: inputVals, backgroundColor: "#58a6ff", borderRadius: 6 },
+        { label: "Cost (USD)", data: costVals, backgroundColor: "#3fb950", borderRadius: 6, yAxisID: "y1" }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#e6edf3" } } },
+      scales: {
+        x: { ticks: { color: "#8b949e" }, grid: { color: "#283041" } },
+        y: { ticks: { color: "#8b949e" }, grid: { color: "#283041" }, beginAtZero: true },
+        y1: { position: "right", ticks: { color: "#8b949e" }, grid: { drawOnChartArea: false }, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function buildTable(labels, inputVals, costVals) {
+  let html = "<table><thead><tr><th>Ação</th><th class='num'>Input Tokens</th><th class='num'>Cost (USD)</th></tr></thead><tbody>";
+  for (let i = 0; i < labels.length; i++) {
+    html += `<tr><td>${labels[i]}</td><td class='num'>${fmt(inputVals[i])}</td><td class='num'>${usd(costVals[i])}</td></tr>`;
+  }
+  html += "</tbody></table>";
+  return html;
+}
+
+function renderEvents(events) {
+  const body = document.getElementById("eventsBody");
+  if (!events.length) { body.innerHTML = '<tr><td colspan="7" class="small">No events recorded yet.</td></tr>'; return; }
+  body.innerHTML = events.map(e => {
+    const hit = e.cache_hit ? '<span class="badge yes">hit</span>' : '<span class="badge no">miss</span>';
+    return `<tr>
+      <td>${e.action || ""}</td>
+      <td>${e.model || ""}</td>
+      <td class="num">${fmt(e.input_tokens)}</td>
+      <td class="num">${fmt(e.cached_tokens)}</td>
+      <td>${hit}</td>
+      <td class="num">${usd(e.cost_usd)}</td>
+      <td>${e.created_at || ""}</td>
+    </tr>`;
+  }).join("");
+}
+
+load();
+setInterval(load, 5000);
+</script>
+</body>
+</html>
