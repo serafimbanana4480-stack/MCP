@@ -1,0 +1,97 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "projectmind-mcp"
+version = "1.0.0"
+description = "Local-first architectural memory and reasoning server for the Model Context Protocol"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { file = "LICENSE" }
+authors = [{ name = "ProjectMind contributors" }]
+keywords = ["mcp", "model-context-protocol", "code-indexing", "developer-tools"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+  "mcp>=1.28.1,<2",
+  "networkx>=3.2,<4",
+  "pydantic>=2.11,<3",
+  "rich>=13.9,<15",
+  "typer>=0.15,<1",
+  "watchfiles>=1.0,<2",
+]
+
+[project.optional-dependencies]
+parsing = [
+  "tree-sitter>=0.24,<0.26",
+  "tree-sitter-language-pack>=0.9,<1",
+]
+dashboard = [
+  "fastapi>=0.115,<1",
+  "uvicorn>=0.34,<1",
+]
+dev = [
+  "build>=1.2,<2",
+  "coverage[toml]>=7.6,<8",
+  "hypothesis>=6.120,<7",
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<10",
+  "ruff>=0.9,<1",
+]
+
+[project.scripts]
+projectmind = "projectmind.cli.main:app"
+projectmind-mcp = "projectmind.cli.main:app"
+
+[project.urls]
+Documentation = "https://github.com/projectmind/projectmind-mcp#readme"
+Issues = "https://github.com/projectmind/projectmind-mcp/issues"
+Source = "https://github.com/projectmind/projectmind-mcp"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/projectmind"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+markers = [
+  "integration: tests crossing package or process boundaries",
+  "benchmark: timing-oriented checks excluded from functional gates",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["projectmind"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF012", "B008", "UP042"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unreachable = true
+packages = ["projectmind"]
+
+[[tool.mypy.overrides]]
+module = ["networkx.*"]
+ignore_missing_imports = true
+

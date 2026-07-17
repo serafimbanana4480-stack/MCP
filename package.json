@@ -1,0 +1,25 @@
+{
+  "name": "projectmind-mcp",
+  "version": "1.0.0",
+  "description": "Local-first architectural memory and reasoning MCP server (Python backend, npx launcher).",
+  "bin": {
+    "projectmind-mcp": "index.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "code-indexing"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/projectmind/projectmind-mcp"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "preferGlobal": false
+}

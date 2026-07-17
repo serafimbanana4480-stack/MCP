@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.coverage
+.hypothesis/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+.projectmind/
+frontend/node_modules/
+frontend/dist/
+
+# Runtime artifacts
+*.log
+projectmind-server.*
+test_full.txt
+test_out2.txt
+test_output.txt
+test_run*.log
+
